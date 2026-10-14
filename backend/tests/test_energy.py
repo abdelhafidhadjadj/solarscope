@@ -46,3 +46,36 @@ def test_invalid_energy_is_rejected(bad):
 def test_invalid_capacity_is_rejected(bad):
     with pytest.raises(ValueError):
         scale_energy_kwh(1500, bad)
+
+
+# ---- seasonal summary ---------------------------------------------------------
+
+from solarscope.solar.energy import seasonal_summary  # noqa: E402
+
+# Recorded PVGIS 5.3 monthly energies for 1 kWp in Algiers (see fixtures/).
+ALGIERS_MONTHLY = [95.07, 103.85, 132.73, 139.87, 151.51, 156.49,
+                   165.41, 160.41, 137.79, 127.45, 91.5, 88.91]
+
+
+def test_seasonal_summary_on_recorded_algiers_values():
+    summary = seasonal_summary(ALGIERS_MONTHLY)
+    assert (summary.best_month, summary.best_kwh) == (7, 165.41)
+    assert (summary.worst_month, summary.worst_kwh) == (12, 88.91)
+    assert summary.best_to_worst_ratio == pytest.approx(165.41 / 88.91)
+
+
+def test_seasonal_ratio_is_none_when_worst_month_is_zero():
+    values = [0.0] + [10.0] * 11
+    summary = seasonal_summary(values)
+    assert summary.worst_month == 1
+    assert summary.best_to_worst_ratio is None
+
+
+def test_seasonal_summary_needs_exactly_12_values():
+    with pytest.raises(ValueError):
+        seasonal_summary([1.0] * 11)
+
+
+def test_seasonal_summary_rejects_negative_values():
+    with pytest.raises(ValueError):
+        seasonal_summary([1.0] * 11 + [-1.0])

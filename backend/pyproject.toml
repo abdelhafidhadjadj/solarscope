@@ -20,3 +20,6 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "integration: calls the real PVGIS service; run with RUN_LIVE_TESTS=1",
+]
